@@ -1,0 +1,341 @@
+set "path", {
+  bash: "/bin/bash"
+  scripts:  "~/.local/bin"
+  binaries: "~/.local/bin"
+  profiled: "~/.local/profile.d"
+}
+
+macos ->
+  set "cache_dir", "~/Library/MoondotCache"
+  set "path", {
+    bash:     "/opt/homebrew/bin/bash"
+    brewx86:  "~/Library/Brews/brewx86"
+    scripts:  "~/Library/Scripts"
+    binaries: "~/Library/Binaries"
+    profiled: "~/Library/profile.d"
+    homebrew: "/opt/homebrew"
+  }
+
+block "Directories", ->
+  needed_dirs = { var.path.scripts, var.path.binaries, var.path.profiled }
+  for _, d in ipairs needed_dirs
+    file d, directory: true
+
+block "Files to clear", ->
+  clear_files = { '~/.bash_aliases' }
+  for _, f in ipairs clear_files
+    file f, ensure: 'absent'
+
+block "Main RC files", ->
+  template "~/.profile"
+    environment: var.path
+    margin: 3
+    inline: '
+      if test -d "<%- scripts %>"
+        then PATH="<%- scripts %>:${PATH}"
+      fi
+
+      if test -d "<%- binaries %>"
+        then PATH="<%- binaries %>:${PATH}"
+      fi
+
+      if test -d "<%- profiled %>" && (find "<%- profiled %>" -maxdepth 1 -iname "*.sh" | read)
+        then for file in "<%- profiled %>"/*.sh
+          do . "$file"
+        done
+      fi
+
+      export PATH="${PATH}"
+      PROFILE_LOADED=1
+    '
+
+  file "~/.bashrc"
+    margin: 3
+    inline: '
+      if [[ -s "${HOME}/.profile" ]] && [[ "${PROFILE_LOADED:0} != 1 ]]
+        then source "${HOME}/.profile"
+      fi
+    '
+
+  file "~/.bash_profile"
+    margin: 3
+    inline: '
+      if [[ -s "${HOME}/.profile" ]] && [[ "${PROFILE_LOADED:0}" != 1 ]]
+        then source "${HOME}/.profile"
+      fi
+    '
+
+block "User profile.d", ->
+    file "#{var.path.profiled}/99-history.sh"
+      margin: 4
+      inline: '
+        export HISTSIZE="99999"
+        export HISTFILESIZE="9999999999"
+      '
+
+    file "#{var.path.profiled}/99-rvm.sh"
+      margin: 4
+      inline: '
+        # Prepare env for RVM
+        PATH="${PATH}:${HOME}/.rvm/bin"
+
+        if test -d "${HOME}/.rvm/bin"
+          then PATH="${PATH}:${HOME}/.rvm/bin"
+        fi
+
+        if test -s "${HOME}/.rvm/scripts/rvm"
+          then . "${HOME}/.rvm/scripts/rvm"
+        fi
+      '
+
+    macos ->
+      file "#{var.path.profiled}/00-shutup-macos.sh"
+        margin: 5
+        inline: [[
+          export BASH_SILENCE_DEPRECATION_WARNING=1
+        ]]
+
+
+      file "#{var.path.profiled}/00-aliases.sh"
+        margin: 5
+        inline: [[
+          alias ls='ls -Gla'
+          alias sudo='sudo -k'
+          alias code='open -a Visual\ Studio\ Code'
+        ]]
+
+      template "#{var.path.profiled}/10-homebrew.sh"
+        environment: env
+        margin: 5
+        inline: '
+          # Setup homebrew on both macOS-x86 and macOS-arm, and setup homebrew_x86 for
+          # macOS-arm
+          brew_dir=/opt/homebrew/
+          arch="$(arch)"
+
+          if [[ "$arch" != "i386" ]]
+            then brew_dir=/opt/homebrew/
+            else if test -d /opt/homebrew/
+              then brew_dir="<%- brewx86 %>"
+            fi
+          fi
+
+          if test -f "${brew_dir}/brew"
+          then
+            eval "$("${brew_dir}/brew" shellenv)"
+            PATH="${brew_dir}/sbin:${PATH}"
+          else
+            install_homebrew() {
+              /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            }
+          fi
+        '
+
+block "Luajit Devel Environment", ->
+  lj_repo = repo "openresty/luajit2"
+    creates: { "#prefix:bin/luajit" }
+    builder: ->
+      env.set_var "MACOSX_DEPLOYMENT_TARGET", "12.00"
+      env.file.replace_lines "Makefile",
+        "^export PREFIX=.*$",
+        "export PREFIX=#{env.prefix}",
+        limit: 1
+      env.run "make"
+      env.run "make", "install"
+    cleaner: ->
+      env.git.clean "-f"
+      env.git.reset "--hard"
+
+  var.path.luajit = lj_repo.prefix
+
+  lr_repo = repo "luarocks/luarocks"
+    creates: { "#prefix:bin/luarocks", "#prefix:bin/luarocks-admin" }
+    builder: ->
+      env.run "sh", "configure",
+        "--prefix=#{env.prefix}",
+        "--with-lua=#{env.luajit_pfx}",
+        "--with-lua-include=#{env.luajit_pfx}/include/luajit-2.1",
+        "--with-lua-lib=#{env.luajit_pfx}/lib"
+      env.run "make"
+      env.run "make", "install"
+    cleaner: ->
+      env.git.clean "-f"
+      env.git.reset "--hard"
+    environment:
+      "luajit_pfx": var.path.luajit
+
+  var.path.luarocks = lr_repo.prefix
+
+  macos ->
+    template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
+      environment: var.path
+      margin: 4
+      inline: [[
+        rocks_trees = {
+          { name = "user", root = home .. "/.luarocks" };
+          { name = "system", root = "<%- luarocks %>" };
+        }
+        lua_interpreter = "luajit";
+        variables = {
+          LUA_DIR = "<%- luajit %>",
+          LUA_INCDIR = "<%- luajit %>/include/luajit-2.1",
+          LUA_BINDIR = "<%- luajit %>/bin",
+          LUA_LIBDIR = "<%- luajit %>/lib",
+          CC = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
+          LD = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
+          -- This needs to be done manually, as Luarocks (at this time) does not automatically
+          -- use /opt/homebrew/lib
+          LIBFLAG = "-bundle -undefined dynamic_lookup -all_load -L<%- homebrew %>/lib"
+        }
+        external_deps_dirs = {
+          "<%- homebrew %>",
+          "/usr/local",
+          "/usr",
+        }
+        runtime_external_deps_patterns = {
+          bin = {
+            "?"
+          },
+          include = {
+              "?.h"
+          },
+          lib = {
+            "/?/lib/lib?.dylib",
+            "lib?.tbd",
+            "lib?.dylib",
+            "lib?.a",
+            "lib?.so.*",
+            "lib?.so",
+          }
+        }
+      ]]
+
+  set 'luarocks', "#{var.path.luarocks}/bin/luarocks"
+  set 'luarocks_prefix', var.path.luarocks
+
+  template "#{var.path.profiled}/10-luajit.sh"
+    environment: var.path
+    margin: 3
+    inline: '
+      if test -d "<%- luajit %>/bin"
+        then export PATH="<%- luajit %>/bin:${PATH}"
+      fi
+    '
+
+  template "#{var.path.profiled}/10-luarocks.sh"
+    environment: var.path
+    margin: 3
+    inline: '
+      if test -d "<%- luarocks %>/bin"
+        then export PATH="<%- luarocks %>/bin:${PATH}"
+      fi
+
+      if command -v luarocks >/dev/null 2>&1
+        then eval "$(luarocks path)"
+      fi
+    '
+
+  template "#{var.path.scripts}/library_fixer"
+    environment: var.path
+    chmod: '0700'
+    margin: 3
+    inline: [[
+      #!/bin/sh
+      #
+      # library_fixer: A configurable shell wrapper for gcc/clang to correct
+      #   library names for luarocks specifically. This is made to cover cases
+      #   where libraries that have been left unmaintained (though still usable)
+      #   fail to build on systems due to library file name mismatches.
+      # Author: Alison Wyatt
+      #
+      # Example configuration file:
+      #   ~/.libfix:
+      #     zzip := zzip-0
+      #     lib2 := lib2_6.2
+
+      PERFORM_EXEC=1
+
+      for arg
+      do
+        shift
+
+        case $arg in
+          (--libfixer-debug-mode)
+            PERFORM_EXEC=0
+            ;;
+          (-l*)
+            # Don't bother if we don't have a configuration file available
+            if ! test -f ~/.libfix
+              then set -- "$@" "$arg" && continue
+            fi
+
+            library="${arg##*-l}"
+            if test -z "$library"
+              then set -- "$@" "$arg" && continue
+            fi
+
+            replacement="$( grep "${library} *:= *" ~/.libfix)"
+            replacement="${replacement// /}"
+            replacement="${replacement##*:=}"
+
+            if test -z "$replacement"
+            then
+              echo "library_fixer: Failed to fixup ${arg}: $( grep "${library} *:= " ~/.libfix)"
+              exit 1
+            fi
+
+            echo "!!! library_fixer: replacing ${arg} with -l${replacement} !!!"
+            arg="-l$replacement"
+            ;;
+        esac
+
+        set -- "$@" "$arg"
+      done
+
+      if test "$PERFORM_EXEC" = 0
+      then
+        echo "$@"
+        exit 0
+      fi
+
+      "$@"
+      exit $?
+    ]]
+
+  rock "moonscript"
+  rock "penlight"
+  rock "lua-json"
+  rock "luazip"
+  rock "etlua"
+  rock "md5"
+
+  repo "Sleepyfugu/Moondot"
+    creates: { "#{var.path.luarocks}/bin/moondot" }
+    builder: ->
+      env.del_var 'LUA_PATH'
+      env.del_var 'LUA_CPATH'
+      env.run "#{var.path.luarocks}/bin/luarocks", "make", "moondot-dev-1.rockspec"
+    cleaner: ->
+      env.git.clean "-f"
+      env.git.reset "--hard"
+
+
+
+block "External Scripts", ->
+  repo "Bijman/srb2bld"
+
+  file "#{var.path.scripts}/srb2bld"
+    source: "@Bijman/srb2bld:srb2bld"
+    chmod:  '0700'
+
+  macos ->
+    file "#{var.path.profiled}/10-srb2bld.sh"
+      margin: 4
+      inline: '
+        # SDKROOT is only a required environmental variable for macOS
+        if command -v srb2bld >/dev/null 2>&1
+          then if test -d /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+            then export SDKROOT="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+          fi
+        fi
+      '
