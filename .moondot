@@ -89,11 +89,9 @@ block "Luajit Devel Environment", ->
   set 'luarocks', "#{var.path.luarocks}/bin/luarocks"
   set 'luarocks_prefix', var.path.luarocks
 
-  macos ->
-    template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
-      environment: var.path
-      source: '@SleepyFugu/dotfiles:env/luarocks/config-5.1_luajit.lua.etlua'
-
+  template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
+    environment: var.path
+    source: '@SleepyFugu/dotfiles:env/luarocks/config-5.1_luajit.lua.etlua'
   template "#{var.path.profiled}/10-luajit.sh"
     source: '@SleepyFugu/dotfiles:env/profiled/10-luajit.sh.etlua'
     environment: var.path
