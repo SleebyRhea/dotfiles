@@ -332,6 +332,7 @@ block "Luajit Devel Environment", ->
   rock "moonscript"
   rock "penlight"
   rock "lua-json"
+  rock "lyaml"
   rock "luazip"
   rock "etlua"
   rock "md5"
