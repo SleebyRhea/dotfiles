@@ -1,0 +1,3 @@
+if test -d "<%- luajit %>/bin"
+  then export PATH="<%- luajit %>/bin:${PATH}"
+fi

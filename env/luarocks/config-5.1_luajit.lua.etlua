@@ -1,0 +1,40 @@
+rocks_trees = {
+  { name = "user", root = home .. "/.luarocks" };
+  { name = "system", root = "<%- luarocks %>" };
+}
+lua_interpreter = "luajit";
+variables = {
+  LUA_DIR = "<%- luajit %>",
+  LUA_INCDIR = "<%- luajit %>/include/luajit-2.1",
+  LUA_BINDIR = "<%- luajit %>/bin",
+  LUA_LIBDIR = "<%- luajit %>/lib",
+  CC = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
+  LD = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
+  -- This needs to be done manually, as Luarocks (at this time) does not
+  -- automaticallyuse /opt/homebrew/lib despite setting external_deps_dirs
+  --
+  -- (technically, you can just add it directly there; but this is more explicit)
+  --
+  LIBFLAG = "-bundle -undefined dynamic_lookup -all_load -L<%- homebrew %>/lib"
+}
+external_deps_dirs = {
+  "<%- homebrew %>",
+  "/usr/local",
+  "/usr",
+}
+runtime_external_deps_patterns = {
+  bin = {
+    "?"
+  },
+  include = {
+      "?.h"
+  },
+  lib = {
+    "/?/lib/lib?.dylib",
+    "lib?.tbd",
+    "lib?.dylib",
+    "lib?.a",
+    "lib?.so.*",
+    "lib?.so",
+  }
+}

@@ -1,0 +1,21 @@
+# Setup homebrew on both macOS-x86 and macOS-arm, and setup homebrew_x86 for
+# macOS-arm
+brew_dir=/opt/homebrew/
+arch="$(arch)"
+
+if [[ "$arch" != "i386" ]]
+  then brew_dir=/opt/homebrew/
+  else if test -d /opt/homebrew/
+    then brew_dir="<%- brewx86 %>"
+  fi
+fi
+
+if test -f "${brew_dir}/brew"
+then
+  eval "$("${brew_dir}/brew" shellenv)"
+  PATH="${brew_dir}/sbin:${PATH}"
+else
+  install_homebrew() {
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  }
+fi

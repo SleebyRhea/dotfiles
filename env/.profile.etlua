@@ -1,0 +1,25 @@
+#!<%- bash %>
+#
+# Load user-level profile files from <%- profiled %> into the local
+# environment.
+#
+# shellcheck disable=SC2034
+# shellcheck disable=SC1090
+
+if test -d "<%- scripts %>"
+  then PATH="<%- scripts %>:${PATH}"
+fi
+
+if test -d "<%- binaries %>"
+  then PATH="<%- binaries %>:${PATH}"
+fi
+
+if test -d "<%- profiled %>" && (find "<%- profiled %>" -maxdepth 1 -iname "*.sh" | read)
+  then for file in "<%- profiled %>"/*.sh
+    do . "$file"
+  done
+fi
+
+export PATH="${PATH}"
+
+PROFILE_LOADED=1

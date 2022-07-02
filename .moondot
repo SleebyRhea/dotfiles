@@ -1,3 +1,5 @@
+repo "SleepyFugu/dotfiles"
+
 set "path", {
   bash: "/bin/bash"
   scripts:  "~/.local/bin"
@@ -28,108 +30,27 @@ block "Files to clear", ->
 
 block "Main RC files", ->
   template "~/.profile"
+    source: '@SleepyFugu/dotfiles:env/.profile.etlua'
     environment: var.path
-    margin: 3
-    inline: '
-      if test -d "<%- scripts %>"
-        then PATH="<%- scripts %>:${PATH}"
-      fi
-
-      if test -d "<%- binaries %>"
-        then PATH="<%- binaries %>:${PATH}"
-      fi
-
-      if test -d "<%- profiled %>" && (find "<%- profiled %>" -maxdepth 1 -iname "*.sh" | read)
-        then for file in "<%- profiled %>"/*.sh
-          do . "$file"
-        done
-      fi
-
-      export PATH="${PATH}"
-      PROFILE_LOADED=1
-    '
-
   file "~/.bashrc"
-    margin: 3
-    inline: '
-      if [[ -s "${HOME}/.profile" ]] && [[ "${PROFILE_LOADED:0} != 1 ]]
-        then source "${HOME}/.profile"
-      fi
-    '
-
+    source: '@SleepyFugu/dotfiles:env/.bashrc.etlua'
   file "~/.bash_profile"
-    margin: 3
-    inline: '
-      if [[ -s "${HOME}/.profile" ]] && [[ "${PROFILE_LOADED:0}" != 1 ]]
-        then source "${HOME}/.profile"
-      fi
-    '
+    source: '@SleepyFugu/dotfiles:env/.bash_profile.etlua'
 
 block "User profile.d", ->
     file "#{var.path.profiled}/99-history.sh"
-      margin: 4
-      inline: '
-        export HISTSIZE="99999"
-        export HISTFILESIZE="9999999999"
-      '
-
+      source: '@SleepyFugu/dotfiles:env/profiled/99-history.sh'
     file "#{var.path.profiled}/99-rvm.sh"
-      margin: 4
-      inline: '
-        # Prepare env for RVM
-        PATH="${PATH}:${HOME}/.rvm/bin"
-
-        if test -d "${HOME}/.rvm/bin"
-          then PATH="${PATH}:${HOME}/.rvm/bin"
-        fi
-
-        if test -s "${HOME}/.rvm/scripts/rvm"
-          then . "${HOME}/.rvm/scripts/rvm"
-        fi
-      '
+      source: '@SleepyFugu/dotfiles:env/profiled/99-rvm.sh'
 
     macos ->
       file "#{var.path.profiled}/00-shutup-macos.sh"
-        margin: 5
-        inline: [[
-          export BASH_SILENCE_DEPRECATION_WARNING=1
-        ]]
-
-
+        source: '@SleepyFugu/dotfiles:env/profiled/00-shutup-macos.sh'
       file "#{var.path.profiled}/00-aliases.sh"
-        margin: 5
-        inline: [[
-          alias ls='ls -Gla'
-          alias sudo='sudo -k'
-          alias code='open -a Visual\ Studio\ Code'
-        ]]
-
+        source: '@SleepyFugu/dotfiles:env/profiled/00-aliases.sh'
       template "#{var.path.profiled}/10-homebrew.sh"
         environment: env
-        margin: 5
-        inline: '
-          # Setup homebrew on both macOS-x86 and macOS-arm, and setup homebrew_x86 for
-          # macOS-arm
-          brew_dir=/opt/homebrew/
-          arch="$(arch)"
-
-          if [[ "$arch" != "i386" ]]
-            then brew_dir=/opt/homebrew/
-            else if test -d /opt/homebrew/
-              then brew_dir="<%- brewx86 %>"
-            fi
-          fi
-
-          if test -f "${brew_dir}/brew"
-          then
-            eval "$("${brew_dir}/brew" shellenv)"
-            PATH="${brew_dir}/sbin:${PATH}"
-          else
-            install_homebrew() {
-              /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            }
-          fi
-        '
+        source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
 
 block "Luajit Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
@@ -165,78 +86,20 @@ block "Luajit Devel Environment", ->
       "luajit_pfx": var.path.luajit
 
   var.path.luarocks = lr_repo.prefix
+  set 'luarocks', "#{var.path.luarocks}/bin/luarocks"
+  set 'luarocks_prefix', var.path.luarocks
 
   macos ->
     template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
       environment: var.path
-      margin: 4
-      inline: [[
-        rocks_trees = {
-          { name = "user", root = home .. "/.luarocks" };
-          { name = "system", root = "<%- luarocks %>" };
-        }
-        lua_interpreter = "luajit";
-        variables = {
-          LUA_DIR = "<%- luajit %>",
-          LUA_INCDIR = "<%- luajit %>/include/luajit-2.1",
-          LUA_BINDIR = "<%- luajit %>/bin",
-          LUA_LIBDIR = "<%- luajit %>/lib",
-          CC = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
-          LD = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
-          -- This needs to be done manually, as Luarocks (at this time) does not
-          -- automaticallyuse /opt/homebrew/lib despite setting external_deps_dirs
-          --
-          -- (technically, you can just add it directly there; but this is more explicit)
-          --
-          LIBFLAG = "-bundle -undefined dynamic_lookup -all_load -L<%- homebrew %>/lib"
-        }
-        external_deps_dirs = {
-          "<%- homebrew %>",
-          "/usr/local",
-          "/usr",
-        }
-        runtime_external_deps_patterns = {
-          bin = {
-            "?"
-          },
-          include = {
-              "?.h"
-          },
-          lib = {
-            "/?/lib/lib?.dylib",
-            "lib?.tbd",
-            "lib?.dylib",
-            "lib?.a",
-            "lib?.so.*",
-            "lib?.so",
-          }
-        }
-      ]]
-
-  set 'luarocks', "#{var.path.luarocks}/bin/luarocks"
-  set 'luarocks_prefix', var.path.luarocks
+      source: '@SleepyFugu/dotfiles:env/luarocks/config-5.1_luajit.lua.etlua'
 
   template "#{var.path.profiled}/10-luajit.sh"
+    source: '@SleepyFugu/dotfiles:env/profiled/10-luajit.sh.etlua'
     environment: var.path
-    margin: 3
-    inline: '
-      if test -d "<%- luajit %>/bin"
-        then export PATH="<%- luajit %>/bin:${PATH}"
-      fi
-    '
-
   template "#{var.path.profiled}/10-luarocks.sh"
+    source: '@SleepyFugu/dotfiles:env/profiled/10-luarocks.sh.etlua'
     environment: var.path
-    margin: 3
-    inline: '
-      if test -d "<%- luarocks %>/bin"
-        then export PATH="<%- luarocks %>/bin:${PATH}"
-      fi
-
-      if command -v luarocks >/dev/null 2>&1
-        then eval "$(luarocks path)"
-      fi
-    '
 
   macos ->
     file "~/.libfix"
@@ -247,87 +110,9 @@ block "Luajit Devel Environment", ->
       ]]
 
   template "#{var.path.scripts}/library_fixer"
+    source: '@SleepyFugu/dotfiles:env/scripts/library_fixer.sh.etlua'
     environment: var.path
     chmod: '0700'
-    margin: 3
-    inline: [[
-      #!/bin/sh
-      #
-      # library_fixer: A configurable shell wrapper for gcc/clang to correct
-      #   library names for luarocks specifically. This is made to cover cases
-      #   where libraries that have been left unmaintained (though still usable)
-      #   fail to build on systems due to library file name mismatches.
-      #
-      # Author: Alison Wyatt
-      #
-      # Example configuration file:
-      #   ~/.libfix:
-      #     zzip := zzip-0
-      #     lib2 := lib2_6.2
-
-      PERFORM_EXEC=1
-
-      debug() { :; }
-
-      for arg
-      do
-        shift
-
-        case $arg in
-          (--libfixer-debug-mode)
-            PERFORM_EXEC=0
-            debug() { echo "$@" ; }
-            echo "!!! Enabled debug mode !!!"
-            continue
-            ;;
-
-          (-l*)
-            debug "Testing existence of ~/.libfix"
-            if ! test -f ~/.libfix
-              then set -- "$@" "$arg" && continue
-              else debug "Confirmed, continuing"
-            fi
-
-            library="${arg}"
-            debug "Checking library variable: ${library}"
-            if test -z "$library"
-              then set -- "$@" "$arg" && continue
-              else debug "Variable not empty, continuing"
-            fi
-
-            debug "Checking existence of ${library} in ~/.libfix"
-            if ! grep "^${library} *:=..*" ~/.libfix >/dev/null 2>&1
-              then set -- "$@" "$arg" && continue
-              else debug "Library present, continuing"
-            fi
-
-            debug "Getting ${library} from ~/.libfix"
-            replacement="$( sed "/^${library} *:=/{s#^${library} *:= *\(..*\)\$#\1#;q;}" ~/.libfix )"
-
-
-            if test -z "$replacement"
-            then
-              echo "library_fixer: Failed to fixup ${arg}: $( grep "${library} *:= " ~/.libfix)"
-              exit 1
-            fi
-
-            echo "!!! library_fixer: replacing ${arg} with ${replacement} !!!"
-            arg="${replacement}"
-            ;;
-        esac
-
-        set -- "$@" $arg
-      done
-
-      if test "$PERFORM_EXEC" = 0
-      then
-        echo "$@"
-        exit 0
-      fi
-
-      "$@"
-      exit $?
-    ]]
 
   rock "moonscript"
   rock "penlight"
@@ -347,10 +132,6 @@ block "Luajit Devel Environment", ->
       env.git.clean "-f"
       env.git.reset "--hard"
 
-  repo "SleepyFugu/dotfiles"
-  file "~/.moondot"
-    source: "@SleepyFugu/dotfiles:.moondot"
-
 block "External Scripts", ->
   repo "Bijman/srb2bld"
 
@@ -360,12 +141,4 @@ block "External Scripts", ->
 
   macos ->
     file "#{var.path.profiled}/10-srb2bld.sh"
-      margin: 4
-      inline: '
-        # SDKROOT is only a required environmental variable for macOS
-        if command -v srb2bld >/dev/null 2>&1
-          then if test -d /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-            then export SDKROOT="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
-          fi
-        fi
-      '
+      source: '@SleepyFugu/dotfiles:env/profile/10-srb2bld.sh'
