@@ -33,9 +33,9 @@ block "Main RC files", ->
     source: '@SleepyFugu/dotfiles:env/.profile.etlua'
     environment: var.path
   file "~/.bashrc"
-    source: '@SleepyFugu/dotfiles:env/.bashrc.etlua'
+    source: '@SleepyFugu/dotfiles:env/.bashrc'
   file "~/.bash_profile"
-    source: '@SleepyFugu/dotfiles:env/.bash_profile.etlua'
+    source: '@SleepyFugu/dotfiles:env/.bash_profile'
 
 block "User profile.d", ->
     file "#{var.path.profiled}/99-history.sh"
@@ -49,7 +49,7 @@ block "User profile.d", ->
       file "#{var.path.profiled}/00-aliases.sh"
         source: '@SleepyFugu/dotfiles:env/profiled/00-aliases.sh'
       template "#{var.path.profiled}/10-homebrew.sh"
-        environment: env
+        environment: var.path
         source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
 
 block "Luajit Devel Environment", ->
