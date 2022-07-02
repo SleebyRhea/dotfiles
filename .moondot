@@ -304,7 +304,6 @@ block "Luajit Devel Environment", ->
             debug "Getting ${library} from ~/.libfix"
             replacement="$( sed "/^${library} *:=/{s#^${library} *:= *\(..*\)\$#\1#;q;}" ~/.libfix )"
 
-
             if test -z "$replacement"
             then
               echo "library_fixer: Failed to fixup ${arg}: $( grep "${library} *:= " ~/.libfix)"
@@ -336,6 +335,11 @@ block "Luajit Devel Environment", ->
   rock "etlua"
   rock "md5"
 
+  repo "SleepyFugu/dotfiles"
+
+  file "~/.moondot"
+    source: "@SleepyFugu/dotfiles:.moondot"
+
   repo "Sleepyfugu/Moondot"
     creates: { "#{var.path.luarocks}/bin/moondot" }
     builder: ->
@@ -365,3 +369,6 @@ block "External Scripts", ->
           fi
         fi
       '
+
+
+--luastatic main.lua $(find src -iname '*.lua' | grep -v _spec) $(find lua_modules -iregex '/opt/luarocks/share/.*' -iname '*.lua' -o -iname '*.dylib') /opt/luajit/lib/libluajit-5.1.a -I /opt/luajit/include/luajit-2.1/ -o moondot
