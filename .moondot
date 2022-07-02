@@ -1,5 +1,3 @@
-repo "SleepyFugu/dotfiles"
-
 set "path", {
   bash: "/bin/bash"
   scripts:  "~/.local/bin"
@@ -17,6 +15,8 @@ macos ->
     profiled: "~/Library/profile.d"
     homebrew: "/opt/homebrew"
   }
+
+repo "SleepyFugu/dotfiles"
 
 block "Directories", ->
   needed_dirs = { var.path.scripts, var.path.binaries, var.path.profiled }
@@ -38,19 +38,19 @@ block "Main RC files", ->
     source: '@SleepyFugu/dotfiles:env/.bash_profile'
 
 block "User profile.d", ->
-    file "#{var.path.profiled}/99-history.sh"
-      source: '@SleepyFugu/dotfiles:env/profiled/99-history.sh'
-    file "#{var.path.profiled}/99-rvm.sh"
-      source: '@SleepyFugu/dotfiles:env/profiled/99-rvm.sh'
+  file "#{var.path.profiled}/99-history.sh"
+    source: '@SleepyFugu/dotfiles:env/profiled/99-history.sh'
+  file "#{var.path.profiled}/99-rvm.sh"
+    source: '@SleepyFugu/dotfiles:env/profiled/99-rvm.sh'
 
-    macos ->
-      file "#{var.path.profiled}/00-shutup-macos.sh"
-        source: '@SleepyFugu/dotfiles:env/profiled/00-shutup-macos.sh'
-      file "#{var.path.profiled}/00-aliases.sh"
-        source: '@SleepyFugu/dotfiles:env/profiled/00-aliases.sh'
-      template "#{var.path.profiled}/10-homebrew.sh"
-        environment: var.path
-        source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
+  macos ->
+    file "#{var.path.profiled}/00-shutup-macos.sh"
+      source: '@SleepyFugu/dotfiles:env/profiled/00-shutup-macos.sh'
+    file "#{var.path.profiled}/00-aliases.sh"
+      source: '@SleepyFugu/dotfiles:env/profiled/00-aliases.sh'
+    template "#{var.path.profiled}/10-homebrew.sh"
+      environment: var.path
+      source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
 
 block "Luajit Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
@@ -141,4 +141,4 @@ block "External Scripts", ->
 
   macos ->
     file "#{var.path.profiled}/10-srb2bld.sh"
-      source: '@SleepyFugu/dotfiles:env/profile/10-srb2bld.sh'
+      source: '@SleepyFugu/dotfiles:env/profiled/10-srb2bld.sh'
