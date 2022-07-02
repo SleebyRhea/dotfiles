@@ -107,9 +107,8 @@ block "Luajit Devel Environment", ->
         -lzzip := -lzzip-0
       ]]
 
-  template "#{var.path.scripts}/library_fixer"
-    source: '@SleepyFugu/dotfiles:env/scripts/library_fixer.sh.etlua'
-    environment: var.path
+  file "#{var.path.scripts}/library_fixer"
+    source: '@SleepyFugu/dotfiles:env/scripts/library_fixer.sh'
     chmod: '0700'
 
   rock "moonscript"
