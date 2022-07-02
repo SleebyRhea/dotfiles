@@ -183,8 +183,11 @@ block "Luajit Devel Environment", ->
           LUA_LIBDIR = "<%- luajit %>/lib",
           CC = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
           LD = "env MACOSX_DEPLOYMENT_TARGET=12 <%- scripts %>/library_fixer clang",
-          -- This needs to be done manually, as Luarocks (at this time) does not automatically
-          -- use /opt/homebrew/lib
+          -- This needs to be done manually, as Luarocks (at this time) does not
+          -- automaticallyuse /opt/homebrew/lib despite setting external_deps_dirs
+          --
+          -- (technically, you can just add it directly there; but this is more explicit)
+          --
           LIBFLAG = "-bundle -undefined dynamic_lookup -all_load -L<%- homebrew %>/lib"
         }
         external_deps_dirs = {
@@ -235,6 +238,14 @@ block "Luajit Devel Environment", ->
       fi
     '
 
+  macos ->
+    file "~/.libfix"
+      chmod: '0600'
+      margin: 4
+      inline: [[
+        -lzzip := -lzzip-0
+      ]]
+
   template "#{var.path.scripts}/library_fixer"
     environment: var.path
     chmod: '0700'
@@ -246,6 +257,7 @@ block "Luajit Devel Environment", ->
       #   library names for luarocks specifically. This is made to cover cases
       #   where libraries that have been left unmaintained (though still usable)
       #   fail to build on systems due to library file name mismatches.
+      #
       # Author: Alison Wyatt
       #
       # Example configuration file:
@@ -255,6 +267,8 @@ block "Luajit Devel Environment", ->
 
       PERFORM_EXEC=1
 
+      debug() { :; }
+
       for arg
       do
         shift
@@ -262,21 +276,34 @@ block "Luajit Devel Environment", ->
         case $arg in
           (--libfixer-debug-mode)
             PERFORM_EXEC=0
+            debug() { echo "$@" ; }
+            echo "!!! Enabled debug mode !!!"
+            continue
             ;;
+
           (-l*)
-            # Don't bother if we don't have a configuration file available
+            debug "Testing existence of ~/.libfix"
             if ! test -f ~/.libfix
               then set -- "$@" "$arg" && continue
+              else debug "Confirmed, continuing"
             fi
 
-            library="${arg##*-l}"
+            library="${arg}"
+            debug "Checking library variable: ${library}"
             if test -z "$library"
               then set -- "$@" "$arg" && continue
+              else debug "Variable not empty, continuing"
             fi
 
-            replacement="$( grep "${library} *:= *" ~/.libfix)"
-            replacement="${replacement// /}"
-            replacement="${replacement##*:=}"
+            debug "Checking existence of ${library} in ~/.libfix"
+            if ! grep "^${library} *:=..*" ~/.libfix >/dev/null 2>&1
+              then set -- "$@" "$arg" && continue
+              else debug "Library present, continuing"
+            fi
+
+            debug "Getting ${library} from ~/.libfix"
+            replacement="$( sed "/^${library} *:=/{s#^${library} *:= *\(..*\)\$#\1#;q;}" ~/.libfix )"
+
 
             if test -z "$replacement"
             then
@@ -284,12 +311,12 @@ block "Luajit Devel Environment", ->
               exit 1
             fi
 
-            echo "!!! library_fixer: replacing ${arg} with -l${replacement} !!!"
-            arg="-l$replacement"
+            echo "!!! library_fixer: replacing ${arg} with ${replacement} !!!"
+            arg="${replacement}"
             ;;
         esac
 
-        set -- "$@" "$arg"
+        set -- "$@" $arg
       done
 
       if test "$PERFORM_EXEC" = 0
@@ -318,7 +345,6 @@ block "Luajit Devel Environment", ->
     cleaner: ->
       env.git.clean "-f"
       env.git.reset "--hard"
-
 
 
 block "External Scripts", ->
