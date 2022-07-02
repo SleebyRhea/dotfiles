@@ -346,6 +346,9 @@ block "Luajit Devel Environment", ->
       env.git.clean "-f"
       env.git.reset "--hard"
 
+  repo "SleepyFugu/dotfiles"
+  file "~/.moondot"
+    source: "@SleepyFugu/dotfiles:.moondot"
 
 block "External Scripts", ->
   repo "Bijman/srb2bld"
