@@ -24,7 +24,7 @@ do
     (--libfixer-debug-mode)
       PERFORM_EXEC=0
       debug() { echo "$@" ; }
-      echo "!!! Enabled debug mode !!!"
+      debug "!!! Enabled debug mode !!!"
       continue
       ;;
 
@@ -50,8 +50,6 @@ do
 
       debug "Getting ${library} from ~/.libfix"
       replacement="$( sed "/^${library} *:=/{s#^${library} *:= *\(..*\)\$#\1#;q;}" ~/.libfix )"
-
-
       if test -z "$replacement"
       then
         echo "library_fixer: Failed to fixup ${arg}: $( grep "${library} *:= " ~/.libfix)"
@@ -63,6 +61,7 @@ do
       ;;
   esac
 
+  #shellcheck disable=SC2086
   set -- "$@" $arg
 done
 
