@@ -37,6 +37,7 @@ block "Main RC files", ->
   file "~/.bash_profile"
     source: '@SleepyFugu/dotfiles:env/.bash_profile'
 
+
 block "User profile.d", ->
   file "#{var.path.profiled}/99-history.sh"
     source: '@SleepyFugu/dotfiles:env/profiled/99-history.sh'
@@ -51,6 +52,9 @@ block "User profile.d", ->
     template "#{var.path.profiled}/10-homebrew.sh"
       environment: var.path
       source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
+		file "#{var.path.profiled}/00-micro.sh"
+			source: '@SleepyFugu/dotfiles:env/profiled/00-micro.sh'
+
 
 block "Luajit Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
@@ -100,11 +104,14 @@ block "Luajit Devel Environment", ->
     environment: var.path
 
   macos ->
-    file "~/.libfix"
+    template "~/.libfix"
+      environment: {
+        zzip_cfg: -> command("pkg-config") "--libs-only-L", "--cflags-only-I"
+      }
       chmod: '0600'
       margin: 4
       inline: [[
-        -lzzip := -lzzip-0
+        -lzzip := <%- zzip_cfg() %> -lzzip-0
       ]]
 
   file "#{var.path.scripts}/library_fixer"
@@ -114,10 +121,17 @@ block "Luajit Devel Environment", ->
   rock "moonscript"
   rock "penlight"
   rock "lua-json"
-  rock "lyaml"
+  rock "busted"
   rock "luazip"
+  rock "lyaml"
   rock "etlua"
   rock "md5"
+
+  rock "http"
+    variable_dirs: {
+      CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+      OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+    }
 
   repo "Sleepyfugu/Moondot"
     creates: { "#{var.path.luarocks}/bin/moondot" }
