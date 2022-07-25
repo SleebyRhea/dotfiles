@@ -23,10 +23,12 @@ block "Directories", ->
   for _, d in ipairs needed_dirs
     file d, directory: true
 
+
 block "Files to clear", ->
   clear_files = { '~/.bash_aliases' }
   for _, f in ipairs clear_files
     file f, ensure: 'absent'
+
 
 block "Main RC files", ->
   template "~/.profile"
