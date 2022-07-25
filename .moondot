@@ -23,12 +23,10 @@ block "Directories", ->
   for _, d in ipairs needed_dirs
     file d, directory: true
 
-
 block "Files to clear", ->
   clear_files = { '~/.bash_aliases' }
   for _, f in ipairs clear_files
     file f, ensure: 'absent'
-
 
 block "Main RC files", ->
   template "~/.profile"
@@ -38,7 +36,6 @@ block "Main RC files", ->
     source: '@SleepyFugu/dotfiles:env/.bashrc'
   file "~/.bash_profile"
     source: '@SleepyFugu/dotfiles:env/.bash_profile'
-
 
 block "User profile.d", ->
   file "#{var.path.profiled}/99-history.sh"
@@ -51,12 +48,11 @@ block "User profile.d", ->
       source: '@SleepyFugu/dotfiles:env/profiled/00-shutup-macos.sh'
     file "#{var.path.profiled}/00-aliases.sh"
       source: '@SleepyFugu/dotfiles:env/profiled/00-aliases.sh'
+    file "#{var.path.profiled}/00-micro.sh"
+      source: '@SleepyFugu/dotfiles:env/profiled/00-micro.sh'
     template "#{var.path.profiled}/10-homebrew.sh"
       environment: var.path
       source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
-		file "#{var.path.profiled}/00-micro.sh"
-			source: '@SleepyFugu/dotfiles:env/profiled/00-micro.sh'
-
 
 block "Luajit Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
@@ -108,7 +104,7 @@ block "Luajit Devel Environment", ->
   macos ->
     template "~/.libfix"
       environment: {
-        zzip_cfg: -> command("pkg-config") "--libs-only-L", "--cflags-only-I"
+        zzip_cfg: -> command("pkg-config") "zziplib", "--libs-only-L", "--cflags-only-I"
       }
       chmod: '0600'
       margin: 4
