@@ -1,5 +1,7 @@
 if test -d "<%- luarocks %>/bin"
-  then export PATH="<%- luarocks %>/bin:${PATH}"
+then
+	export PATH="<%- luarocks %>/bin:${PATH}"
+	export LUAROCKS_PREFIX="<%- luarocks  %>"
 fi
 
 if command -v luarocks >/dev/null 2>&1
