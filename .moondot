@@ -109,7 +109,7 @@ block "Luajit Devel Environment", ->
       chmod: '0600'
       margin: 4
       inline: [[
-        -lzzip := <%- zzip_cfg() %> -lzzip-0
+        -lzzip := -<%- zzip_cfg() %> -lzzip-0
       ]]
 
   file "#{var.path.scripts}/library_fixer"
