@@ -1,5 +1,5 @@
 declare micro_loc
-export MICRO_CFG='<%- microcfg %>'
+export MICRO_CFG="<%- microcfg %>"
 if micro_loc="$(command -v micro 2>/dev/null)"
 then
 	alias micro="${micro_loc} -config-dir '$MICRO_CFG'"
