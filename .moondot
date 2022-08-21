@@ -3,7 +3,7 @@ set "path", {
   scripts:  "~/.local/bin"
   binaries: "~/.local/bin"
   profiled: "~/.local/profile.d"
-  microcfg: "~/.local/micro"
+  microcfg: "~/.config/micro"
 }
 
 macos ->
@@ -19,6 +19,8 @@ macos ->
   }
 
 repo "SleepyFugu/dotfiles"
+repo "SleepyFugu/microgit-plugin"
+repo "SleepyFugu/micro-moonscript"
 
 block "Directories", ->
   needed_dirs = { var.path.scripts, var.path.binaries, var.path.profiled, var.path.microcfg}
@@ -57,23 +59,23 @@ block "User profile.d", ->
       source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
 
 block "Micro Plugins", ->
-  repo "SleepyFugu/microgit-plugin"
-  repo "SleepyFugu/micro-moonscript"
-  
   file "#{var.path.microcfg}/syntax", directory: true
   file "#{var.path.microcfg}/plug/ugit", directory: true
 
   file "#{var.path.microcfg}/settings.json",
     source: "@SleepyFugu/dotfiles:env/micro/settings.json"
+
   file "#{var.path.microcfg}/bindings.json",
     source: "@SleepyFugu/dotfiles:env/micro/bindings.json"
+
   file "#{var.path.microcfg}/syntax/moonscript.yaml",
     source: "@SleepyFugu/micro-moonscript:moonscript.yaml"
-  
+
   file "#{var.path.microcfg}/plug/ugit/main.lua",
     source: "@SleepyFugu/microgit-plugin:main.lua"
+
   file "#{var.path.microcfg}/plug/ugit/repo.json",
-      source: "@SleepyFugu/microgit-plugin:repo.json"
+    source: "@SleepyFugu/microgit-plugin:repo.json"
 
 block "Luajit Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
