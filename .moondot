@@ -3,6 +3,7 @@ set "path", {
   scripts:  "~/.local/bin"
   binaries: "~/.local/bin"
   profiled: "~/.local/profile.d"
+  microcfg: "~/.local/micro"
 }
 
 macos ->
@@ -14,12 +15,13 @@ macos ->
     binaries: "~/Library/Binaries"
     profiled: "~/Library/profile.d"
     homebrew: "/opt/homebrew"
+    microcfg: "~/Library/Application Support/Micro-Editor"
   }
 
 repo "SleepyFugu/dotfiles"
 
 block "Directories", ->
-  needed_dirs = { var.path.scripts, var.path.binaries, var.path.profiled }
+  needed_dirs = { var.path.scripts, var.path.binaries, var.path.profiled, var.path.microcfg}
   for _, d in ipairs needed_dirs
     file d, directory: true
 
@@ -53,6 +55,25 @@ block "User profile.d", ->
     template "#{var.path.profiled}/10-homebrew.sh"
       environment: var.path
       source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
+
+block "Micro Plugins", ->
+  repo "SleepyFugu/microgit-plugin"
+  repo "SleepyFugu/micro-moonscript"
+  
+  file "#{var.path.microcfg}/syntax", directory: true
+  file "#{var.path.microcfg}/plug/ugit", directory: true
+
+  file "#{var.path.microcfg}/settings.json",
+    source: "@SleepyFugu/dotfiles:env/micro/settings.json"
+  file "#{var.path.microcfg}/bindings.json",
+    source: "@SleepyFugu/dotfiles:env/micro/bindings.json"
+  file "#{var.path.microcfg}/syntax/moonscript.yaml",
+    source: "@SleepyFugu/micro-moonscript:moonscript.yaml"
+  
+  file "#{var.path.microcfg}/plug/ugit/main.lua",
+    source: "@SleepyFugu/microgit-plugin:main.lua"
+  file "#{var.path.microcfg}/plug/ugit/repo.json",
+      source: "@SleepyFugu/microgit-plugin:repo.json"
 
 block "Luajit Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
@@ -142,12 +163,10 @@ block "Luajit Devel Environment", ->
       env.git.reset "--hard"
 
 block "External Scripts", ->
-  repo "Bijman/srb2bld"
-
-  file "#{var.path.scripts}/srb2bld"
-    source: "@Bijman/srb2bld:srb2bld"
-    chmod:  '0700'
-
   macos ->
+    repo "Bijman/srb2bld"
+    file "#{var.path.scripts}/srb2bld"
+      source: "@Bijman/srb2bld:srb2bld"
+      chmod:  '0700'
     file "#{var.path.profiled}/10-srb2bld.sh"
       source: '@SleepyFugu/dotfiles:env/profiled/10-srb2bld.sh'

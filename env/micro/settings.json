@@ -1,0 +1,12 @@
+{
+    "*.moon": {
+        "commenttype": "-- %s"
+    },
+    "colorcolumn": 80,
+    "colorscheme": "monokai",
+    "diffgutter": true,
+    "statusformatr": " $(ugit.onbranch) ↑$(ugit.numahead) ↓$(ugit.numbehind) ↓↑$(ugit.numstaged) | commit:$(ugit.oncommit)",
+    "tabsize": 2,
+    "tabstospaces": true,
+    "ugit.command": "/usr/bin/git"
+}
