@@ -52,8 +52,9 @@ block "User profile.d", ->
       source: '@SleepyFugu/dotfiles:env/profiled/00-shutup-macos.sh'
     file "#{var.path.profiled}/00-aliases.sh"
       source: '@SleepyFugu/dotfiles:env/profiled/00-aliases.sh'
-    file "#{var.path.profiled}/00-micro.sh"
-      source: '@SleepyFugu/dotfiles:env/profiled/00-micro.sh'
+    template "#{var.path.profiled}/00-micro.sh"
+      environment: var.path
+      source: '@SleepyFugu/dotfiles:env/profiled/00-micro.sh.etlua'
     template "#{var.path.profiled}/10-homebrew.sh"
       environment: var.path
       source: '@SleepyFugu/dotfiles:env/profiled/10-homebrew.sh.etlua'
