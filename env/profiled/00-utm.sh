@@ -1,0 +1,1 @@
+alias utmctl=/Applications/UTM.app/Contents/MacOS/utmctl
