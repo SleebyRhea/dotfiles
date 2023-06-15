@@ -44,7 +44,7 @@ block "Main RC files", ->
 block "User profile.d", ->
   file "#{var.path.profiled}/99-history.sh"
     source: '@SleebyRhea/dotfiles:env/profiled/90-history.sh'
-  file "#{var.path.profiled}/99-rvm.sh"
+  file "#{var.path.profiled}/90-rvm.sh"
     source: '@SleebyRhea/dotfiles:env/profiled/90-rvm.sh'
 
   macos ->
