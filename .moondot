@@ -22,15 +22,18 @@ repo "SleebyRhea/dotfiles"
 repo "SleebyRhea/microgit-plugin"
 repo "SleebyRhea/micro-moonscript"
 
+
 block "Directories", ->
   needed_dirs = { var.path.scripts, var.path.binaries, var.path.profiled, var.path.microcfg}
   for _, d in ipairs needed_dirs
     file d, directory: true
 
+
 block "Files to clear", ->
   clear_files = { '~/.bash_aliases' }
   for _, f in ipairs clear_files
     file f, ensure: 'absent'
+
 
 block "Main RC files", ->
   template "~/.profile"
@@ -41,8 +44,9 @@ block "Main RC files", ->
   file "~/.bash_profile"
     source: '@SleebyRhea/dotfiles:env/.bash_profile'
 
+
 block "User profile.d", ->
-  file "#{var.path.profiled}/99-history.sh"
+  file "#{var.path.profiled}/90-history.sh"
     source: '@SleebyRhea/dotfiles:env/profiled/90-history.sh'
   file "#{var.path.profiled}/90-rvm.sh"
     source: '@SleebyRhea/dotfiles:env/profiled/90-rvm.sh'
@@ -60,6 +64,7 @@ block "User profile.d", ->
     template "#{var.path.profiled}/10-homebrew.sh"
       environment: var.path
       source: '@SleebyRhea/dotfiles:env/profiled/10-homebrew.sh.etlua'
+
 
 block "Micro Plugins", ->
   file "#{var.path.microcfg}/syntax", directory: true
@@ -79,6 +84,7 @@ block "Micro Plugins", ->
 
   file "#{var.path.microcfg}/plug/ugit/repo.json",
     source: "@SleebyRhea/microgit-plugin:repo.json"
+
 
 block "Lua Devel Environment", ->
   lj_repo = repo "openresty/luajit2"
@@ -107,6 +113,7 @@ block "Lua Devel Environment", ->
   --     { "#repo:lua", "#prefix:bin/lua53" }
 
   var.path.luajit = lj_repo.prefix
+  var.path.luarocks = var.path.luajit
   --var.path.lua53 = lua53_repo.prefix
 
   lua_repo = repo "luarocks/luarocks"
@@ -188,13 +195,6 @@ block "Lua Devel Environment", ->
   rock "etlua"
   rock "md5"
 
-  macos ->
-    rock "http"
-      variable_dirs: {
-        CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
-        OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
-      }
-
   repo "SleebyRhea/Moondot"
     creates: { "#{var.path.luarocks}/bin/moondot" }
     builder: ->
@@ -204,6 +204,13 @@ block "Lua Devel Environment", ->
     cleaner: ->
       env.git.clean "-f"
       env.git.reset "--hard"
+
+  macos ->
+    rock "http"
+      variable_dirs: {
+        CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+        OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+      }
 
 
 block "External Scripts", ->
