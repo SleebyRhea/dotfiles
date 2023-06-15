@@ -113,12 +113,13 @@ block "Lua Devel Environment", ->
     creates: { "#prefix:bin/luarocks", "#prefix:bin/luarocks-admin" }
     builder: ->
       env.run "sh", "configure",
-        "--prefix=#{env.lua53_pfx}",
+        "--prefix=#{env.luajit_pfx}",
         "--with-lua=#{env.luajit_pfx}",
         "--with-lua-include=#{env.luajit_pfx}/include/luajit-2.1",
         "--with-lua-lib=#{env.luajit_pfx}/lib"
       env.run "make"
       env.run "make", "install"
+
       -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks",
       --   "#{env.luajit_pfx}/bin/luarocks-luajit"
       -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
@@ -143,7 +144,7 @@ block "Lua Devel Environment", ->
       env.git.reset "--hard"
     environment:
       "luajit_pfx": var.path.luajit
-      "lua53_pfx": var.path.lua53
+      --"lua53_pfx": var.path.lua53
 
   template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
     environment: var.path
