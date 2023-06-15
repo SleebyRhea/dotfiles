@@ -119,10 +119,10 @@ block "Lua Devel Environment", ->
         "--with-lua-lib=#{env.luajit_pfx}/lib"
       env.run "make"
       env.run "make", "install"
-      env.run "mv", "#{env.luajit_pfx}/bin/luarocks",
-        "#{env.luajit_pfx}/bin/luarocks-luajit"
-      env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
-        "#{env.luajit_pfx}/bin/luarocks-admin-luajit"
+      -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks",
+      --   "#{env.luajit_pfx}/bin/luarocks-luajit"
+      -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
+      --   "#{env.luajit_pfx}/bin/luarocks-admin-luajit"
 
       -- env.git.clean "-f"
       -- env.git.reset "--hard"
