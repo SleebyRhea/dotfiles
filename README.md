@@ -1,2 +1,2 @@
 # dotfiles
-Publically hosted dotfiles. Uses SleepyFugu/Moondot to handle management.
+Publically hosted dotfiles. Uses SleebyRhea/Moondot to handle management.
