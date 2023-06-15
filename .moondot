@@ -95,19 +95,19 @@ block "Lua Devel Environment", ->
       env.git.clean "-f"
       env.git.reset "--hard"
 
-  lua53_repo = repo "lua/lua"
-    creates: {"#prefix:bin/lua53"}
-    builder: ->
-      env.set_var "MACOSX_DEPLOYMENT_TARGET", "12.00"
-      env.run "make", "all", "test"
-    cleaner: ->
-      env.git.clean "-f"
-      env.git.reset "--hard"
-    install:
-      { "#repo:lua", "#prefix:bin/lua53" }
+  -- lua53_repo = repo "lua/lua"
+  --   creates: {"#prefix:bin/lua53"}
+  --   builder: ->
+  --     env.set_var "MACOSX_DEPLOYMENT_TARGET", "12.00"
+  --     env.run "make", "all", "test"
+  --   cleaner: ->
+  --     env.git.clean "-f"
+  --     env.git.reset "--hard"
+  --   install:
+  --     { "#repo:lua", "#prefix:bin/lua53" }
 
   var.path.luajit = lj_repo.prefix
-  var.path.lua53 = lua53_repo.prefix
+  --var.path.lua53 = lua53_repo.prefix
 
   lr_repo = repo "luarocks/luarocks"
     creates: { "#prefix:bin/luarocks", "#prefix:bin/luarocks-admin" }
@@ -124,19 +124,19 @@ block "Lua Devel Environment", ->
       env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
         "#{env.luajit_pfx}/bin/luarocks-admin-luajit"
 
-      env.git.clean "-f"
-      env.git.reset "--hard"
-      env.run "sh", "configure",
-        "--prefix=#{env.lua53_pfx}",
-        "--with-lua=#{env.lua53_pfx}",
-        "--with-lua-include=#{env.lua53_pfx}/include/luajit-2.1",
-        "--with-lua-lib=#{env.lua53_pfx}/lib"
-      env.run "make"
-      env.run "make", "install"
-      env.run "mv", "#{env.luajit_pfx}/bin/luarocks",
-        "#{env.luajit_pfx}/bin/luarocks-lua53"
-      env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
-        "#{env.luajit_pfx}/bin/luarocks-admin-lua53"
+      -- env.git.clean "-f"
+      -- env.git.reset "--hard"
+      -- env.run "sh", "configure",
+      --   "--prefix=#{env.lua53_pfx}",
+      --   "--with-lua=#{env.lua53_pfx}",
+      --   "--with-lua-include=#{env.lua53_pfx}/include/luajit-2.1",
+      --   "--with-lua-lib=#{env.lua53_pfx}/lib"
+      -- env.run "make"
+      -- env.run "make", "install"
+      -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks",
+      --   "#{env.luajit_pfx}/bin/luarocks-lua53"
+      -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
+      --   "#{env.luajit_pfx}/bin/luarocks-admin-lua53"
 
     cleaner: ->
       env.git.clean "-f"
@@ -155,7 +155,7 @@ block "Lua Devel Environment", ->
     source: '@SleepyFugu/dotfiles:env/profiled/10-lua.sh.etlua'
     environment: coalesce var.path, {
       "luajit_pfx": var.path.luajit
-      "lua53_pfx": var.path.lua53
+      --"lua53_pfx": var.path.lua53
     }
   template "#{var.path.profiled}/10-luarocks.sh"
     source: '@SleepyFugu/dotfiles:env/profiled/10-luarocks.sh.etlua'
@@ -176,7 +176,8 @@ block "Lua Devel Environment", ->
     source: '@SleepyFugu/dotfiles:env/scripts/library_fixer.sh'
     chmod: '0700'
 
-  for lua_repo in *{lua53_repo, lj_repo}
+  -- for lua_repo in *{lua53_repo, lj_repo}
+  for lua_repo in *{lj_repo}
     var.path.luarocks, lua_repo.prefix
     set 'luarocks', "#{var.path.luarocks}/bin/luarocks-luajit"
     set 'luarocks_prefix', lua_repo.prefix
