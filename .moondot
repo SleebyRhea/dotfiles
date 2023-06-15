@@ -109,7 +109,7 @@ block "Lua Devel Environment", ->
   var.path.luajit = lj_repo.prefix
   --var.path.lua53 = lua53_repo.prefix
 
-  lr_repo = repo "luarocks/luarocks"
+  lua_repo = repo "luarocks/luarocks"
     creates: { "#prefix:bin/luarocks", "#prefix:bin/luarocks-admin" }
     builder: ->
       env.run "sh", "configure",
@@ -148,9 +148,6 @@ block "Lua Devel Environment", ->
   template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
     environment: var.path
     source: '@SleepyFugu/dotfiles:env/luarocks/config-5.1_luajit.lua.etlua'
-  template "#{var.path.profiled}/10-luajit.sh"
-    source: '@SleepyFugu/dotfiles:env/profiled/10-luajit.sh.etlua'
-    environment: var.path
   template "#{var.path.profiled}/10-lua.sh"
     source: '@SleepyFugu/dotfiles:env/profiled/10-lua.sh.etlua'
     environment: coalesce var.path, {
@@ -177,26 +174,25 @@ block "Lua Devel Environment", ->
     chmod: '0700'
 
   -- for lua_repo in *{lua53_repo, lj_repo}
-  for lua_repo in *{lj_repo}
-    var.path.luarocks, lua_repo.prefix
-    set 'luarocks', "#{var.path.luarocks}/bin/luarocks-luajit"
-    set 'luarocks_prefix', lua_repo.prefix
+  var.path.luarocks = lua_repo.prefix
+  set 'luarocks_prefix', lua_repo.prefix
+  set 'luarocks', "#{var.path.luarocks}/bin/luarocks"
 
-    rock "moonscript"
-    rock "penlight"
-    rock "lua-json"
-    rock "busted"
-    rock "luazip"
-    rock "lyaml"
-    rock "etlua"
-    rock "md5"
+  rock "moonscript"
+  rock "penlight"
+  rock "lua-json"
+  rock "busted"
+  rock "luazip"
+  rock "lyaml"
+  rock "etlua"
+  rock "md5"
 
-    macos ->
-      rock "http"
-        variable_dirs: {
-          CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
-          OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
-        }
+  macos ->
+    rock "http"
+      variable_dirs: {
+        CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+        OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+      }
 
   repo "Sleepyfugu/Moondot"
     creates: { "#{var.path.luarocks}/bin/moondot" }
