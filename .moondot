@@ -43,9 +43,9 @@ block "Main RC files", ->
 
 block "User profile.d", ->
   file "#{var.path.profiled}/99-history.sh"
-    source: '@SleebyRhea/dotfiles:env/profiled/99-history.sh'
+    source: '@SleebyRhea/dotfiles:env/profiled/90-history.sh'
   file "#{var.path.profiled}/99-rvm.sh"
-    source: '@SleebyRhea/dotfiles:env/profiled/99-rvm.sh'
+    source: '@SleebyRhea/dotfiles:env/profiled/90-rvm.sh'
 
   macos ->
     file "#{var.path.profiled}/00-shutup-macos.sh"
@@ -119,11 +119,9 @@ block "Lua Devel Environment", ->
         "--with-lua-lib=#{env.luajit_pfx}/lib"
       env.run "make"
       env.run "make", "install"
-
-      -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks",
-      --   "#{env.luajit_pfx}/bin/luarocks-luajit"
-      -- env.run "mv", "#{env.luajit_pfx}/bin/luarocks-admin",
-      --   "#{env.luajit_pfx}/bin/luarocks-admin-luajit"
+      env.run "mkdir", "#{env.prefix}/bin"
+      env.run "ln", "-s", "#{env.luajit_pfx}/bin/luarocks", "#{env.prefix}/bin/"
+      env.run "ln", "-s", "#{env.luajit_pfx}/bin/luarocks-admin", "#{env.prefix}/bin/"
 
       -- env.git.clean "-f"
       -- env.git.reset "--hard"
@@ -144,19 +142,21 @@ block "Lua Devel Environment", ->
       env.git.reset "--hard"
     environment:
       "luajit_pfx": var.path.luajit
-      --"lua53_pfx": var.path.lua53
+      -- "lua53_pfx": var.path.lua53
 
   template "#{var.path.luarocks}/etc/luarocks/config-5.1.lua",
     environment: var.path
     source: '@SleebyRhea/dotfiles:env/luarocks/config-5.1_luajit.lua.etlua'
-  template "#{var.path.profiled}/10-lua.sh"
-    source: '@SleebyRhea/dotfiles:env/profiled/10-lua.sh.etlua'
+
+  template "#{var.path.profiled}/90-lua.sh"
+    source: '@SleebyRhea/dotfiles:env/profiled/90-lua.sh.etlua'
     environment: coalesce var.path, {
       "luajit_pfx": var.path.luajit
       --"lua53_pfx": var.path.lua53
     }
-  template "#{var.path.profiled}/10-luarocks.sh"
-    source: '@SleebyRhea/dotfiles:env/profiled/10-luarocks.sh.etlua'
+
+  template "#{var.path.profiled}/99-luarocks.sh"
+    source: '@SleebyRhea/dotfiles:env/profiled/99-luarocks.sh.etlua'
     environment: var.path
 
   macos ->
