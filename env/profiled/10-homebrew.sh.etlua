@@ -1,23 +1,23 @@
 # Setup homebrew on both macOS-x86 and macOS-arm, and setup homebrew_x86 for
 # macOS-arm
-brew_dir=/opt/homebrew/
+brew_dir=<% homebrew or "" %>
 arch="$(arch)"
 
-if [[ "$arch" != "i386" ]]
-  then brew_dir=/opt/homebrew/
-  else if test -d /opt/homebrew/
-    then brew_dir="<%- brewx86 %>"
+if [[ "$brew_dir" == "" ]]
+  then if [[ "$arch" != "i386" ]]
+    then brew_dir=/opt/homebrew/
+    else brew_dir=/usr/local/
   fi
 fi
 
 if test -f "${brew_dir}/brew"
 then
-  export HOMEBREW_PREFIX="/opt/homebrew";
-  export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
-  export HOMEBREW_REPOSITORY="/opt/homebrew";
-  export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/opt/homebrew/sbin${PATH+:$PATH}";
-  export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
-  export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
+  export HOMEBREW_PREFIX="${brew_dir}";
+  export HOMEBREW_CELLAR="${brew_dir}/Cellar";
+  export HOMEBREW_REPOSITORY="${brew_dir}";
+  export PATH="${brew_dir}/bin:${brew_dir}/sbin:${brew_dir}/sbin${PATH+:$PATH}";
+  export MANPATH="${brew_dir}/share/man${MANPATH+:$MANPATH}:";
+  export INFOPATH="${brew_dir}/share/info:${INFOPATH:-}";
 else
   install_homebrew() {
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
