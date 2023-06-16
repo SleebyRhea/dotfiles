@@ -1,5 +1,3 @@
-# Setup homebrew on both macOS-x86 and macOS-arm, and setup homebrew_x86 for
-# macOS-arm
 brew_dir='<%- homebrew %>'
 arch="$(arch)"
 
