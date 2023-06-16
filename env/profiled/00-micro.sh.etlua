@@ -2,7 +2,9 @@ declare micro_loc
 export MICRO_CFG="<%- microcfg %>"
 if micro_loc="$(command -v micro 2>/dev/null)"
 then
+	if ! test -d "$MICRO_CFG"
+		then mkdir -p "$MICRO_CFG"
+	fi
 	alias micro="${micro_loc} -config-dir '$MICRO_CFG'"
-	mkdir -p '$MICRO_CFG'
 fi
 unset micro_loc
