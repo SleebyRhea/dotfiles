@@ -126,7 +126,7 @@ block "Lua Devel Environment", ->
         "--with-lua-lib=#{env.luajit_pfx}/lib"
       env.run "make"
       env.run "make", "install"
-      env.run "mkdir", "#{env.prefix}/bin"
+      env.run "mkdir", "-p", "#{env.prefix}/bin"
       env.run "ln", "-s", "#{env.luajit_pfx}/bin/luarocks", "#{env.prefix}/bin/"
       env.run "ln", "-s", "#{env.luajit_pfx}/bin/luarocks-admin", "#{env.prefix}/bin/"
 
@@ -208,8 +208,8 @@ block "Lua Devel Environment", ->
   macos ->
     rock "http"
       variable_dirs: {
-        CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
-        OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1q"
+        CRYPTO_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1u"
+        OPENSSL_DIR: "/opt/homebrew/Cellar/openssl@1.1/1.1.1u"
       }
 
 
