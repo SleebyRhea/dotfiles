@@ -8,7 +8,7 @@ if [[ "$brew_dir" == "" ]]
   fi
 fi
 
-if test -f "${brew_dir}/brew"
+if test -f "${brew_dir}/bin/brew"
 then
   export HOMEBREW_PREFIX="${brew_dir}";
   export HOMEBREW_CELLAR="${brew_dir}/Cellar";
@@ -17,7 +17,6 @@ then
   export MANPATH="${brew_dir}/share/man${MANPATH+:$MANPATH}:";
   export INFOPATH="${brew_dir}/share/info:${INFOPATH:-}";
 
-  export HOMEBREW_PREFIX="$brew_dir"
   if [[ -r "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh" ]]
   then
     source "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh"
