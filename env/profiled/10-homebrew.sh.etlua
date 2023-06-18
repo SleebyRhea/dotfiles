@@ -16,6 +16,17 @@ then
   export PATH="${brew_dir}/bin:${brew_dir}/sbin:${brew_dir}/sbin${PATH+:$PATH}";
   export MANPATH="${brew_dir}/share/man${MANPATH+:$MANPATH}:";
   export INFOPATH="${brew_dir}/share/info:${INFOPATH:-}";
+
+  export HOMEBREW_PREFIX="$brew_dir"
+  if [[ -r "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh" ]]
+  then
+    source "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh"
+  else
+    for COMPLETION in "${HOMEBREW_PREFIX}/etc/bash_completion.d/"*
+    do
+      [[ -r "${COMPLETION}" ]] && source "${COMPLETION}"
+    done
+  fi
 else
   install_homebrew() {
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
